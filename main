@@ -1,0 +1,86 @@
+import random
+import urllib.request
+
+
+wordListUrl = "https://gist.githubusercontent.com/deostroll/7693b6f3d48b44a89ee5f57bf750bd32/raw/426f564cf73b4c87d2b2c46ccded8a5b98658ce1/dictionary.txt"
+wordList = urllib.requeaaaaaaaaaaaaaaaast.urlopen(wordListUrl).read().decode("utf-8").split("\n") #link is for full list of words that user is allowed to input
+wordBank = [word.strip().upper() for word in wordList if len(word.strip()) == 5]
+
+
+commonWords = urllib.request.urlopen("https://raw.githubusercontent.com/first20hours/google-10000-english/master/20k.txt").read().decode("utf-8").split("\n") #link has a list of common words from which the actual word is chosen
+possibleWords = sorted([word for word in wordBank if word.lower() in commonWords])
+
+
+guesses = 6
+guessedWord = ['_', '_', '_', '_', '_']
+alphabet = [chr(i) for i in range(65, 91)]
+usedHint = False
+
+
+def checkGuess(guess):
+  correctLetters = []
+  for i in range(5):
+    if guess[i] == word[i]:
+      guessedWord[i] = guess[i]
+    elif guess[i] in word and guess[i] not in guessedWord and guess[i] not in correctLetters:
+      correctLetters.append(guess[i])
+    if guess[i] in alphabet:
+      alphabet.remove(guess[i])
+  return correctLetters
+
+
+def checkValidityOfGuess(guess):
+  guess = guess.upper()
+  if guess.lower() == "l":
+    print("Here are all the letters you have not used yet: " + " ".join(alphabet))
+    guess = input("What is your guess?\n")
+    return checkValidityOfGuess(guess)
+  if guess.lower() == "h":
+    global usedHint
+    if not usedHint:
+      hintLetter = guessedWord.index("_")
+      guessedWord[hintLetter] = word[hintLetter]
+      print("".join(guessedWord))
+      usedHint = True
+      guess = input("What is your guess?\n")
+      return checkValidityOfGuess(guess)
+    else:
+      print("You already used your 1 hint!")
+      guess = input("What is your guess?\n")
+      return checkValidityOfGuess(guess)
+  if guess.lower() == "g":
+    print("You have " + str(guesses) + " guesses left.")
+    guess = input("What is your guess?\n")
+    return checkValidityOfGuess(guess)
+  while (len(guess)) != 5:
+    guess = input("Oops! That wasn't 5 letters. Try again!\n")
+    return checkValidityOfGuess(guess)
+  while guess not in wordBank:
+    guess = input("Please make sure your guess is a real word.\n")
+    return checkValidityOfGuess(guess)
+  return guess
+
+
+word = random.choice(possibleWords).upper()
+print("Hello! Welcome to my version of the popular game of Wordle.")
+
+
+guess1 = input("Type 'i' to see the instructions or make your first guess:\n")
+if guess1.lower() == "i":
+  print("You have 6 chances to guess a 5-letter word. If your guess has a letter which also exists in the correct word but is in the wrong spot, it will show up above your next prompt to guess again. If you guess a letter correctly in the right spot, it will automatically be placed in the spaces. If you want to see the letters you haven't used yet, type 'l.' If you want a hint, type 'h.' If you want to see how many guesses you have left, type 'g.'")
+  guess1 = input("Give your first guess!\n")
+validGuess = checkValidityOfGuess(guess1)
+guesses -= 1
+letters = checkGuess(validGuess.upper())
+
+
+while (not ("".join(guessedWord)) == (word)) and guesses > 0:
+  guess2 = input(" ".join(letters) + "\nGuess again!\n\n" + "".join(guessedWord) + "\n")
+  validGuess = checkValidityOfGuess(guess2)
+  guesses -= 1
+  letters = checkGuess(validGuess.upper())
+if ("".join(guessedWord) == (word)):
+  print("\nYou guessed it in " + str(6 - guesses) + " guesses! The word was " + word + ".")
+elif (guesses == 0):
+  print("\nYou lost... The word was " + word + ".")
+
